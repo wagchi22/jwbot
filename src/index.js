@@ -284,7 +284,7 @@ async function start() {
   const debugLog = createWhatsAppDebugLogger(config.debugLogEnabled);
   if (config.debugLogEnabled) {
     debugLog('session-start', { note: 'Sensitive console messages and response bodies are omitted.' });
-    logInfo('Log escrito em jwbot-debug.txt.');
+    logInfo('Log escrito em log.txt.');
   }
   logInfo('Iniciando API...');
   let whatsappReady = false;

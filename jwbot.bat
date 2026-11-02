@@ -1,2 +1,7 @@
 @echo off
-start "jwbot" powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0jwbot.ps1"
+cls
+cd /d "%~dp0"
+title jwbot
+node src\index.js
+pause >nul
+exit
