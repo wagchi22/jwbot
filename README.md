@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/public/logo.svg" alt="Logo do projeto" width="400">
+</p>
+
 # jwbot
 
 Bot simples para receber notificações do Jellyfin e enviá-las para números do WhatsApp.
@@ -75,7 +79,7 @@ A sessão do WhatsApp fica em `.wwebjs_auth/` e não deve ser compartilhada nem 
 
 O endpoint `GET /health` informa se a conexão com o WhatsApp já está pronta.
 
-Para investigar falhas de rede do WhatsApp Web, defina `WA_DEBUG_LOG=1` no `.env` e reinicie o bot. Os erros HTTP (incluindo status `403`), falhas de requisição e horários serão registrados em `jwbot-debug.txt`, na raiz do projeto. O arquivo é ignorado pelo Git e não é enviado ao GitHub; não o force para um commit nem o compartilhe sem revisar. Corpos de resposta, mensagens do console, cabeçalhos e query strings não são gravados, e identificadores óbvios nos caminhos das URLs são ocultados. O log é limitado a 1 MB, mantendo uma cópia anterior em `jwbot-debug.txt.1`. Desative o diagnóstico com `WA_DEBUG_LOG=0`.
+Para investigar falhas de rede do WhatsApp Web, defina `WA_DEBUG_LOG=1` no `.env` e reinicie o bot. Os erros HTTP (incluindo status `403`), falhas de requisição e horários serão registrados em `log.txt`, na raiz do projeto. O arquivo é ignorado pelo Git e não é enviado ao GitHub; não o force para um commit nem o compartilhe sem revisar. Corpos de resposta, mensagens do console, cabeçalhos e query strings não são gravados, e identificadores óbvios nos caminhos das URLs são ocultados. O log é limitado a 1 MB, mantendo uma cópia anterior em `log.txt.1`. Desative o diagnóstico com `WA_DEBUG_LOG=0`.
 
 ## Integração com o Jellyfin
 

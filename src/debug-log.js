@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { logError } = require('./logger');
 
-const defaultLogPath = path.join(__dirname, '..', 'jwbot-debug.txt');
+const defaultLogPath = path.join(__dirname, '..', 'log.txt');
 const maxLogBytes = 1024 * 1024;
 
 function sanitizeRequestUrl(value) {

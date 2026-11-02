@@ -13,7 +13,7 @@ const {
 
 test('does not create a debug log when diagnostics are disabled', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'jellywhats-debug-'));
-  const filePath = path.join(directory, 'jwbot-debug.txt');
+  const filePath = path.join(directory, 'log.txt');
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
 
   createWhatsAppDebugLogger(false, filePath)('http-response', { status: 403 });
@@ -23,7 +23,7 @@ test('does not create a debug log when diagnostics are disabled', (t) => {
 
 test('writes local diagnostic records without request secrets or message contents', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'jellywhats-debug-'));
-  const filePath = path.join(directory, 'jwbot-debug.txt');
+  const filePath = path.join(directory, 'log.txt');
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
 
   const log = createWhatsAppDebugLogger(true, filePath);
@@ -84,7 +84,7 @@ test('strips query strings and redacts sensitive request path segments', () => {
 
 test('rotates the local debug log when it reaches its size limit', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'jellywhats-debug-'));
-  const filePath = path.join(directory, 'jwbot-debug.txt');
+  const filePath = path.join(directory, 'log.txt');
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
 
   fs.writeFileSync(filePath, 'x'.repeat(maxLogBytes));
