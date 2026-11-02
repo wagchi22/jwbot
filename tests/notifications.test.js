@@ -29,6 +29,27 @@ test('formats common Jellyfin webhook event fields', () => {
   assert.match(message, /Usuário: Ana/);
 });
 
+test('formats removed Jellyfin catalog items', () => {
+  assert.equal(
+    formatNotification({
+      NotificationType: 'ItemRemoved',
+      Name: 'Filme removido',
+      ItemType: 'Movie',
+      Year: 2025,
+    }),
+    'Jellyfin: *Filme removido* saiu do catálogo',
+  );
+  assert.equal(
+    formatNotification({
+      NotificationType: 'ItemRemoved',
+      Name: 'Episódio removido',
+      ItemType: 'Episode',
+      SeriesName: 'Série',
+    }),
+    'Jellyfin: *Série - Episódio removido* saiu do catálogo',
+  );
+});
+
 test('formats Jellyfin webhook username fields', () => {
   assert.match(
     formatNotification({ NotificationType: 'ItemAdded', Username: 'Ana' }),
