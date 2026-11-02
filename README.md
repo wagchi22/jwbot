@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/public/logo.svg" alt="Logo do projeto" width="350">
+  <img src="docs/public/logo.svg" alt="Logo do projeto" width="300">
 </p>
 
 # jwbot
