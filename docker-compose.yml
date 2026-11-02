@@ -1,0 +1,19 @@
+services:
+  jwbot:
+    image: ghcr.io/wagchi22/jwbot:latest
+    init: true
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+      PUPPETEER_NO_SANDBOX: "1"
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - jwbot_auth:/app/.wwebjs_auth
+      - jwbot_cache:/app/.wwebjs_cache
+
+volumes:
+  jwbot_auth:
+  jwbot_cache:

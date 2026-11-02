@@ -294,6 +294,7 @@ async function start() {
     authStrategy: new LocalAuth(),
     puppeteer: {
       handleSIGINT: false,
+      args: process.env.PUPPETEER_NO_SANDBOX === '1' ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
     },
   });
 

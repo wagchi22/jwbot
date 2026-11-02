@@ -32,6 +32,7 @@ function formatNotification(payload) {
     payload.type,
   );
   const itemName = firstString(payload.ItemName, payload.Name, payload.name, payload.title);
+  const seriesName = firstString(payload.SeriesName, payload.seriesName);
   const userName = firstString(
     payload.UserName,
     payload.userName,
@@ -47,6 +48,13 @@ function formatNotification(payload) {
 
   if (!event && !itemName && !userName && !serverName) {
     throw new TypeError('Informe message/text ou campos de um evento do Jellyfin.');
+  }
+
+  if (event === 'ItemRemoved' && itemName) {
+    const title = itemType === 'Episode' && seriesName
+      ? `${seriesName} - ${itemName}`
+      : itemName;
+    return `Jellyfin: *${title}* saiu do catálogo`;
   }
 
   const label = EVENT_LABELS[event] || event || 'Notificação do Jellyfin';

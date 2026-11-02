@@ -63,6 +63,20 @@ npm start
 Depois, escaneie o QR code exibido no terminal com a conta do WhatsApp.
 As mensagens do terminal incluem data/hora local e nível (`INFO` ou `ERRO`), com cores quando executadas em um terminal. Defina `NO_COLOR` para desativar as cores.
 
+### Docker Compose
+
+Gere e configure o arquivo `.env` conforme a seção anterior. Em seguida, construa e inicie o serviço:
+
+```bash
+docker compose pull jwbot
+docker compose up -d jwbot
+docker compose logs -f jwbot
+```
+
+O QR code de autenticação aparece nos logs. A sessão e o cache do WhatsApp são mantidos em volumes Docker mesmo após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
+
+O Compose usa a imagem `ghcr.io/wagchi22/jwbot:latest`, publicada no GitHub Container Registry. Após a publicação inicial, deixe o pacote com visibilidade pública nas configurações do pacote no GitHub para permitir pulls sem autenticação. Commits na branch principal e tags `v*` publicam imagens automaticamente, depois da aprovação dos testes. Por padrão, a API fica disponível na porta definida por `PORT` no `.env` (3000, se não definida). O contêiner usa Chromium instalado na imagem; não é necessário instalar Node.js ou Chromium no host.
+
 No Windows, também é possível usar:
 
 ```powershell
@@ -96,9 +110,11 @@ Exemplo de payload com token e mensagem:
   "apiToken": "<API_TOKEN>",
   "notificationType": "{{json_encode NotificationType}}",
   "itemId": "{{json_encode ItemId}}",
-  "message": "Jellyfin: {{#if_equals ItemType 'Episode'}}*{{json_encode SeriesName}} - {{json_encode Name}}* entrou no catálogo{{else}}*{{json_encode Name}}{{#if_exist Year}} ({{json_encode Year}}){{/if_exist}}* entrou no catálogo{{/if_equals}}"
+  "message": "Jellyfin: {{#if_equals ItemType 'Episode'}}*{{json_encode SeriesName}} - {{json_encode Name}}*{{else}}*{{json_encode Name}}{{#if_exist Year}} ({{json_encode Year}}){{/if_exist}}*{{/if_equals}} {{#if_equals NotificationType 'ItemRemoved'}}saiu do catálogo{{else}}entrou no catálogo{{/if_equals}}"
 }
 ```
+
+Assim, eventos `ItemRemoved` são enviados como `Jellyfin: *<título>* saiu do catálogo`; os demais eventos continuam usando `entrou no catálogo`.
 
 Você também pode enviar um payload simples:
 

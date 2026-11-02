@@ -1,0 +1,13 @@
+.git
+.github
+.husky
+node_modules
+tests
+docs
+.env
+.env.*
+!.env.example
+.wwebjs_auth
+.wwebjs_cache
+log.txt*
+npm-debug.log*
