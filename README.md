@@ -72,14 +72,7 @@ docker compose up -d jwbot
 docker compose logs -f jwbot
 ```
 
-O QR code de autenticação aparece nos logs. A sessão e o cache do WhatsApp são mantidos em volumes Docker mesmo após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
-
-No Windows, o painel de logs do Docker Desktop pode não renderizar corretamente o QR code no terminal. Abra o Windows Terminal maximizado e gere/acompanhe o código por lá:
-
-```powershell
-docker restart jwbot
-docker logs -f jwbot
-```
+O QR code de autenticação aparece nos logs em formato ASCII, compatível com o visualizador do Docker Desktop. A sessão e o cache do WhatsApp são mantidos em volumes Docker mesmo após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
 
 Escaneie o QR code em **WhatsApp > Aparelhos conectados > Conectar aparelho**. Se o código expirar, aguarde o próximo ou reinicie o contêiner para gerar outro. Não compartilhe capturas dos logs enquanto um QR code estiver visível, pois ele pode ser usado para conectar à sessão do WhatsApp.
 
