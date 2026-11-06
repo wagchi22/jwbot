@@ -1,6 +1,6 @@
 services:
   jwbot:
-    image: ghcr.io/wagchi22/jwbot:v3.1.9
+    image: ghcr.io/wagchi22/jwbot:v3.2.0
     container_name: jwbot
     hostname: jwbot
     init: true
