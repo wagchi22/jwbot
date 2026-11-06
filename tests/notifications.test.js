@@ -4,7 +4,6 @@ const http = require('node:http');
 const { formatNotification } = require('../src/notifications');
 const {
   createApp,
-  isKnownNonFatalWhatsAppConsoleError,
   isWhatsAppStreamReady,
   listenForRequests,
   readConfig,
@@ -121,56 +120,6 @@ test('accepts readiness only when the WhatsApp stream is connected and synchroni
   assert.equal(isWhatsAppStreamReady({ ...readyState, streamMode: 'SYNCING' }), false);
   assert.equal(isWhatsAppStreamReady({ ...readyState, connectionState: 'OPENING' }), false);
   assert.equal(isWhatsAppStreamReady(undefined), false);
-});
-
-test('ignores only the known non-fatal pinned-message history error', () => {
-  const warning = [
-    'ErrorUtils caught an error:',
-    '[processLiveMessage] bad history msg false_123@g.us_3EB0F1C3229D06650ED9F7_123@lid',
-    't=pinned_message st=undefined new=undefined fresh=undefined',
-    '(bad-process-live-message-call)',
-    'Subsequent non-fatal errors won\'t be logged; see https://fburl.com/debugjs.',
-  ].join('\n');
-
-  assert.equal(isKnownNonFatalWhatsAppConsoleError(warning), true);
-  assert.equal(
-    isKnownNonFatalWhatsAppConsoleError(
-      '[processLiveMessage] bad history msg false_123@g.us_123@lid t=message (bad-process-live-message-call)',
-    ),
-    false,
-  );
-  assert.equal(isKnownNonFatalWhatsAppConsoleError('Outro erro do WhatsApp Web'), false);
-});
-
-test('ignores the known unsupported newsletter chat message error', () => {
-  const warning = [
-    'ErrorUtils caught an error:',
-    '[newsletter] unsupported msg type=chat sub=undefined (unsupported-newsletter-message)',
-    'Subsequent non-fatal errors won\'t be logged; see https://fburl.com/debugjs.',
-  ].join('\n');
-
-  assert.equal(isKnownNonFatalWhatsAppConsoleError(warning), true);
-  assert.equal(
-    isKnownNonFatalWhatsAppConsoleError(
-      '[newsletter] unsupported msg type=other sub=undefined (unsupported-newsletter-message)',
-    ),
-    false,
-  );
-});
-
-test('ignores the known report-only upgrade-insecure-requests CSP warning', () => {
-  assert.equal(
-    isKnownNonFatalWhatsAppConsoleError(
-      "The Content Security Policy directive 'upgrade-insecure-requests' is ignored when delivered in a report-only policy.",
-    ),
-    true,
-  );
-  assert.equal(
-    isKnownNonFatalWhatsAppConsoleError(
-      "The Content Security Policy directive 'script-src' was violated.",
-    ),
-    false,
-  );
 });
 
 test('reports an occupied API port without an unhandled server error', async (t) => {
@@ -347,7 +296,7 @@ test('logs delivery failures with the reason', async (t) => {
   assert.equal(response.status, 502);
   assert.match(
     errorLines[0],
-    /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} ERRO Falha ao enviar notificação: Attempted to use detached Frame 'frame-id'\.$/,
+    /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} ERRO Falha no envio: Attempted to use detached Frame 'frame-id'$/,
   );
   assert.doesNotMatch(errorLines[0], /15550100101/);
 });

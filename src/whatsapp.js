@@ -11,7 +11,7 @@ async function resolveLid(client, phoneNumber) {
   const lid = await client.pupPage.evaluate(async (number) => {
     const syncUtils = window.require('WAWebContactSyncUtils');
     if (typeof syncUtils?.constructUsyncDeltaQuery !== 'function') {
-      throw new Error('O WhatsApp Web não disponibilizou a consulta de contatos.');
+      throw new Error('O WhatsApp Web não disponibilizou a consulta de contatos');
     }
 
     const query = syncUtils.constructUsyncDeltaQuery([{
@@ -24,7 +24,7 @@ async function resolveLid(client, phoneNumber) {
 
   if (typeof lid !== 'string' || !lid) {
     throw new Error(
-      'O WhatsApp não retornou um LID para este número pela consulta do número nem pela sincronização de contatos.',
+      'O WhatsApp não retornou um LID para este número pela consulta do número nem pela sincronização de contatos',
     );
   }
 
@@ -80,7 +80,7 @@ async function sendWhatsAppMessage(client, phoneNumber, message, configuredSelfN
   try {
     const sentMessage = await client.sendMessage(`${phoneNumber}@c.us`, message);
     if (!sentMessage) {
-      throw new Error('O WhatsApp não confirmou o envio da mensagem.');
+      throw new Error('O WhatsApp não confirmou o envio da mensagem');
     }
     return sentMessage;
   } catch (error) {

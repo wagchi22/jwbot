@@ -3,7 +3,7 @@ function log(level, ...messages) {
     .toLocaleString('pt-BR', { hourCycle: 'h23' })
     .replace(',', '');
   const message = messages.map(String).join(' ');
-  const normalizedMessage = message.replace(/\s+/g, ' ').trim();
+  const normalizedMessage = message.replace(/\s+/g, ' ').trim().replace(/\.+$/, '');
   const stream = level === 'ERRO' ? process.stderr : process.stdout;
   const useColors = stream.isTTY && process.env.NO_COLOR === undefined;
   const timestampText = useColors ? `\u001b[90m${timestamp}\u001b[0m` : timestamp;

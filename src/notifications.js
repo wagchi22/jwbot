@@ -19,7 +19,7 @@ function formatNotification(payload) {
   }
 
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    throw new TypeError('O corpo deve ser uma mensagem ou um objeto JSON.');
+    throw new TypeError('O corpo deve ser uma mensagem ou um objeto JSON');
   }
 
   const directMessage = firstString(payload.message, payload.text);
@@ -47,7 +47,7 @@ function formatNotification(payload) {
   const overview = firstString(payload.Overview, payload.overview);
 
   if (!event && !itemName && !userName && !serverName) {
-    throw new TypeError('Informe message/text ou campos de um evento do Jellyfin.');
+    throw new TypeError('Informe message/text ou campos de um evento do Jellyfin');
   }
 
   if (event === 'ItemRemoved' && itemName) {

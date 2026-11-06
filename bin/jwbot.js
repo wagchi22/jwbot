@@ -15,11 +15,11 @@ function initializeConfig(directory = process.cwd()) {
     fs.writeFileSync(envPath, config, { flag: 'wx', mode: 0o600 });
   } catch (error) {
     if (error.code === 'EEXIST') {
-      throw new Error(`Já existe um arquivo .env em ${directory}; nada foi alterado.`);
+      throw new Error(`Já existe um arquivo .env em ${directory}; nada foi alterado`);
     }
     throw error;
   }
-  console.log(`Configuração criada em ${envPath}. Ajuste WA_RECIPIENTS no arquivo.`);
+  console.log(`Configuração criada em ${envPath}. Ajuste WA_RECIPIENTS no arquivo`);
 }
 
 function printUsage() {
@@ -46,14 +46,14 @@ async function run(args = process.argv.slice(2)) {
     return;
   }
 
-  console.error('Comando ou argumento inválido.');
+  console.error('Comando ou argumento inválido');
   printUsage();
   process.exitCode = 1;
 }
 
 if (require.main === module) {
   run().catch((error) => {
-    console.error(error.message);
+    console.error(error.message.replace(/\.+$/, ''));
     process.exitCode = 1;
   });
 }
