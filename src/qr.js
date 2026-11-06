@@ -1,13 +1,24 @@
 const qrcode = require('qrcode-terminal');
 
 function renderQr(qr) {
-  let output;
-  qrcode.generate(qr, {}, (terminalQr) => {
-    output = terminalQr
-      .replace(/\u001b\[40m  \u001b\[0m/g, '##')
-      .replace(/\u001b\[47m  \u001b\[0m/g, '  ');
+  let terminalQr;
+  qrcode.generate(qr, { small: true }, (output) => {
+    terminalQr = output;
   });
-  return output;
+
+  const rows = terminalQr.split('\n').slice(1, -1);
+  const lightBackground = { '█': ' ', '▀': '▄', '▄': '▀', ' ': '█' };
+  const dataRows = rows.map((row) => row.replace(/[█▀▄ ]/g, (cell) => lightBackground[cell]));
+  const width = dataRows[0].length + 6;
+  const padding = ' '.repeat(width);
+
+  return [
+    padding,
+    padding,
+    ...dataRows.map((row) => `   ${row}   `),
+    padding,
+    padding,
+  ].join('\n');
 }
 
 module.exports = { renderQr };
