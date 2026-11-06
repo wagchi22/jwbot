@@ -12,9 +12,9 @@ services:
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:
-      - jwbot_auth:/app/.wwebjs_auth
-      - jwbot_cache:/app/.wwebjs_cache
+      - jwbot:/app/.wwebjs_auth
+      - jwbot:/app/.wwebjs_cache
 
 volumes:
-  jwbot_auth:
-  jwbot_cache:
+  jwbot:
+    name: jwbot
