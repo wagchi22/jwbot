@@ -1,24 +1,16 @@
-const qrcode = require('qrcode-terminal');
+const QRCode = require('qrcode');
 
-function renderQr(qr) {
-  let terminalQr;
-  qrcode.generate(qr, { small: true }, (output) => {
-    terminalQr = output;
+function renderQrPng(qr) {
+  return QRCode.toBuffer(qr, {
+    type: 'png',
+    errorCorrectionLevel: 'M',
+    margin: 4,
+    width: 320,
+    color: {
+      dark: '#000000',
+      light: '#ffffff',
+    },
   });
-
-  const rows = terminalQr.split('\n').slice(1, -1);
-  const lightBackground = { '█': ' ', '▀': '▄', '▄': '▀', ' ': '█' };
-  const dataRows = rows.map((row) => row.replace(/[█▀▄ ]/g, (cell) => lightBackground[cell]));
-  const width = dataRows[0].length + 6;
-  const padding = ' '.repeat(width);
-
-  return [
-    padding,
-    padding,
-    ...dataRows.map((row) => `   ${row}   `),
-    padding,
-    padding,
-  ].join('\n');
 }
 
-module.exports = { renderQr };
+module.exports = { renderQrPng };
