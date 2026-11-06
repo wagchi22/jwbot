@@ -3,7 +3,8 @@ require('dotenv').config({ quiet: true });
 const crypto = require('node:crypto');
 const http = require('node:http');
 const express = require('express');
-const { renderQr } = require('./qr');
+const { createQrApp } = require('./qr-app');
+const { renderQrPng } = require('./qr');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { formatNotification } = require('./notifications');
 const { sendWhatsAppMessage } = require('./whatsapp');
@@ -84,7 +85,7 @@ function isKnownNonFatalWhatsAppConsoleError(text) {
   return knownNonFatalWhatsAppConsoleErrorPatterns.some((pattern) => pattern.test(text));
 }
 
-function listenForRequests(app, port) {
+function listenForRequests(app, port, host) {
   return new Promise((resolve, reject) => {
     const server = http.createServer(app);
     const onError = (error) => {
@@ -98,7 +99,8 @@ function listenForRequests(app, port) {
 
     server.once('error', onError);
     server.once('listening', onListening);
-    server.listen(port);
+    if (host) server.listen(port, host);
+    else server.listen(port);
   });
 }
 
@@ -109,8 +111,10 @@ function createApp({
   isReady,
   selfPhoneNumber,
   dedupeWindowMs = 300000,
+  qr,
 }) {
   const app = express();
+  app.disable('x-powered-by');
   const recentEvents = new Map();
   app.use(express.json({ limit: '64kb' }));
   app.use(express.text({
@@ -260,6 +264,8 @@ function createApp({
     return res.status(200).json({ sent: targetRecipients.length });
   });
 
+  if (qr) app.use('/qr', createQrApp(qr));
+
   app.use((error, _req, res, _next) => {
     if (error instanceof SyntaxError && 'body' in error) {
       return res.status(400).json({ error: 'JSON inválido.' });
@@ -278,6 +284,8 @@ async function start() {
   const config = readConfig();
   logInfo('Iniciando API...');
   let whatsappReady = false;
+  let qrImage;
+  let qrRevision = 0;
   let readinessInterval;
   let readinessDiagnosticTimeout;
   const client = new Client({
@@ -292,13 +300,24 @@ async function start() {
     clearTimeout(readinessDiagnosticTimeout);
     if (whatsappReady) return;
     whatsappReady = true;
+    qrImage = null;
+    qrRevision += 1;
     logInfo('Sessão do WhatsApp conectada e autenticada.');
     logInfo('Aguardando Webhooks...');
   };
 
   client.on('qr', (qr) => {
-    logInfo('Escaneie este QR code com o WhatsApp para conectar:');
-    console.log(renderQr(qr));
+    const revision = ++qrRevision;
+    qrImage = null;
+    logInfo(`Novo QR code disponível no visualizador local em http://localhost:${config.port}/qr.`);
+    renderQrPng(qr).then((image) => {
+      if (revision !== qrRevision) return;
+      qrImage = image;
+      qrRevision += 1;
+    }).catch((error) => {
+      if (revision !== qrRevision) return;
+      logError(`Não foi possível gerar a imagem do QR code: ${error.message}`);
+    });
   });
   client.on('ready', markWhatsAppReady);
   client.on('loading_screen', (percent, message) => {
@@ -310,13 +329,26 @@ async function start() {
   });
   client.on('auth_failure', (message) => {
     whatsappReady = false;
+    qrImage = null;
+    qrRevision += 1;
     logError(`Falha na autenticação do WhatsApp: ${message}`);
   });
   client.on('disconnected', (reason) => {
     whatsappReady = false;
+    qrImage = null;
+    qrRevision += 1;
     logError(`WhatsApp desconectado: ${reason}`);
   });
 
+  const qr = {
+    apiToken: config.apiToken,
+    tokenMatches,
+    getQrPng: () => qrImage,
+    getState: () => ({
+      state: whatsappReady ? 'ready' : qrImage ? 'qr' : 'waiting',
+      revision: qrRevision,
+    }),
+  };
   const app = createApp({
     client,
     recipients: config.recipients,
@@ -324,6 +356,7 @@ async function start() {
     isReady: () => whatsappReady,
     selfPhoneNumber: config.selfPhoneNumber,
     dedupeWindowMs: config.dedupeWindowMs,
+    qr,
   });
   let server;
   try {
@@ -337,6 +370,7 @@ async function start() {
     throw error;
   }
   logInfo(`API disponível na porta ${config.port}.`);
+  logInfo(`Visualizador do QR disponível em http://localhost:${config.port}/qr (usuário: jwbot; senha: valor de API_TOKEN).`);
 
   let readinessCheckRunning = false;
   let readinessDiagnosticShown = false;
@@ -489,6 +523,7 @@ if (require.main === module) {
 
 module.exports = {
   createApp,
+  createQrApp,
   isKnownNonFatalWhatsAppConsoleError,
   isWhatsAppStreamReady,
   listenForRequests,

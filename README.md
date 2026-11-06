@@ -59,7 +59,7 @@ WA_DEDUPE_WINDOW_SECONDS=300
 npm start
 ```
 
-Depois, escaneie o QR code exibido no terminal com a conta do WhatsApp.
+Depois, abra `http://localhost:3000/qr` no navegador para ver o QR code como imagem. Quando solicitado, use `jwbot` como usuário e o valor de `API_TOKEN` no arquivo `.env` como senha.
 As mensagens do terminal incluem data/hora local e nível (`INFO` ou `ERRO`), com cores quando executadas em um terminal. Defina `NO_COLOR` para desativar as cores.
 
 ### Docker Compose
@@ -69,12 +69,28 @@ Gere e configure o arquivo `.env` conforme a seção anterior. Em seguida, const
 ```bash
 docker compose pull jwbot
 docker compose up -d jwbot
-docker compose logs -f jwbot
 ```
 
-O QR code de autenticação aparece nos logs em formato compacto, com contraste para o fundo claro do visualizador do Docker Desktop. A sessão e o cache do WhatsApp são mantidos em volumes Docker mesmo após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
+O QR code não é impresso nos logs. Abra `http://localhost:3000/qr` no navegador; a tela atualiza o código automaticamente e usa o valor de `API_TOKEN` no `.env` como senha. O visualizador e a API Jellyfin compartilham a porta configurada em `PORT` (3000 por padrão); o visualizador é protegido por autenticação HTTP Basic. A sessão e o cache do WhatsApp são mantidos no único volume Docker `jwbot`, inclusive após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
+
+Para testar alterações locais antes da publicação da imagem, construa a tag indicada pelo Compose e inicie sem buscar a imagem do registry:
+
+```powershell
+docker build -t ghcr.io/wagchi22/jwbot:v3.1.9 .
+docker compose up -d --pull never --no-build jwbot
+```
 
 Escaneie o QR code em **WhatsApp > Aparelhos conectados > Conectar aparelho**. Se o código expirar, aguarde o próximo ou reinicie o contêiner para gerar outro. Não compartilhe capturas dos logs enquanto um QR code estiver visível, pois ele pode ser usado para conectar à sessão do WhatsApp.
+
+Se o Chromium informar que o perfil está em uso depois de recriar o contêiner, pare o serviço e remova apenas os arquivos de trava antigos da sessão. Isso mantém a autenticação salva; não execute se outro contêiner estiver usando o mesmo volume:
+
+```powershell
+docker compose stop jwbot
+docker run --rm -v jwbot:/auth alpine sh -c "rm -f /auth/session/SingletonLock /auth/session/SingletonCookie /auth/session/SingletonSocket"
+docker compose up -d jwbot
+```
+
+O contêiner usa um hostname estável para evitar que o Chromium confunda uma trava deixada por uma recriação com um perfil aberto em outra máquina. A autenticação e o cache continuam no único volume `jwbot`.
 
 O Compose usa a imagem `ghcr.io/wagchi22/jwbot:latest`, publicada no GitHub Container Registry. Após a publicação inicial, deixe o pacote com visibilidade pública nas configurações do pacote no GitHub para permitir pulls sem autenticação. Commits na branch principal e tags `v*` publicam imagens automaticamente, depois da aprovação dos testes. Por padrão, a API fica disponível na porta definida por `PORT` no `.env` (3000, se não definida). O contêiner usa Chromium instalado na imagem; não é necessário instalar Node.js ou Chromium no host.
 
