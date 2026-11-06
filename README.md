@@ -64,7 +64,7 @@ As mensagens do terminal incluem data/hora local e nível (`INFO` ou `ERRO`), co
 
 ### Docker Compose
 
-Gere e configure o arquivo `.env` conforme a seção anterior. Em seguida, construa e inicie o serviço:
+Gere e configure o arquivo `.env` conforme a seção anterior. Em seguida, baixe a imagem mais recente (`latest`) e inicie o serviço:
 
 ```bash
 docker compose pull jwbot
@@ -73,10 +73,10 @@ docker compose up -d jwbot
 
 O QR code não é impresso nos logs. Abra `http://localhost:3000/qr` no navegador; a tela atualiza o código automaticamente. O visualizador não exige autenticação e compartilha a porta da API. Qualquer pessoa com acesso à porta 3000 pode ler o QR enquanto ele estiver válido; mantenha o serviço em uma rede confiável. A sessão e o cache do WhatsApp ficam no único volume Docker `jwbot`, inclusive após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
 
-Para testar alterações locais antes da publicação da imagem, construa a tag indicada pelo Compose e inicie sem buscar a imagem do registry:
+Para testar alterações locais antes da publicação da imagem, construa a tag `latest` usada pelo Compose e inicie sem buscar a imagem do registry:
 
 ```powershell
-docker build -t ghcr.io/wagchi22/jwbot:v3.2.0 .
+docker build -t ghcr.io/wagchi22/jwbot:latest .
 docker compose up -d --pull never --no-build jwbot
 ```
 
