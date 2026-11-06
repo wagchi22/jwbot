@@ -9,5 +9,4 @@ docs
 !.env.example
 .wwebjs_auth
 .wwebjs_cache
-log.txt*
 npm-debug.log*
