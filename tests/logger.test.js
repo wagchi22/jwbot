@@ -11,14 +11,14 @@ test('writes timestamped INFO and ERRO messages as single lines', () => {
   console.error = (line) => errorLines.push(line);
 
   try {
-    logInfo('API disponível', 'na porta 3000.');
+    logInfo('API na porta', '3000.');
     logError('Falha ao enviar notificação:', 'motivo\nem outra linha');
   } finally {
     console.log = originalLog;
     console.error = originalError;
   }
 
-  assert.match(infoLines[0], /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} INFO API disponível na porta 3000\.$/);
+  assert.match(infoLines[0], /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} INFO API na porta 3000$/);
   assert.match(errorLines[0], /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} ERRO Falha ao enviar notificação: motivo em outra linha$/);
 });
 
@@ -53,7 +53,7 @@ test('colors INFO and ERRO output in terminals unless NO_COLOR is set', () => {
     }
   }
 
-  assert.match(infoLines[0], /\u001b\[90m.*\u001b\[0m \u001b\[32mINFO\u001b\[0m API disponível\./);
-  assert.match(errorLines[0], /\u001b\[90m.*\u001b\[0m \u001b\[31mERRO\u001b\[0m Falha ao enviar notificação\./);
-  assert.match(infoLines[1], /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} INFO Sem cores\.$/);
+  assert.match(infoLines[0], /\u001b\[90m.*\u001b\[0m \u001b\[32mINFO\u001b\[0m API disponível$/);
+  assert.match(errorLines[0], /\u001b\[90m.*\u001b\[0m \u001b\[31mERRO\u001b\[0m Falha ao enviar notificação$/);
+  assert.match(infoLines[1], /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2} INFO Sem cores$/);
 });

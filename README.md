@@ -59,7 +59,7 @@ WA_DEDUPE_WINDOW_SECONDS=300
 npm start
 ```
 
-Depois, abra `http://localhost:3000/qr` no navegador para ver o QR code como imagem. Quando solicitado, use `jwbot` como usuário e o valor de `API_TOKEN` no arquivo `.env` como senha.
+Depois, abra `http://localhost:3000/qr` no navegador para ver o QR code como imagem.
 As mensagens do terminal incluem data/hora local e nível (`INFO` ou `ERRO`), com cores quando executadas em um terminal. Defina `NO_COLOR` para desativar as cores.
 
 ### Docker Compose
@@ -71,12 +71,12 @@ docker compose pull jwbot
 docker compose up -d jwbot
 ```
 
-O QR code não é impresso nos logs. Abra `http://localhost:3000/qr` no navegador; a tela atualiza o código automaticamente e usa o valor de `API_TOKEN` no `.env` como senha. O visualizador e a API Jellyfin compartilham a porta configurada em `PORT` (3000 por padrão); o visualizador é protegido por autenticação HTTP Basic. A sessão e o cache do WhatsApp são mantidos no único volume Docker `jwbot`, inclusive após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
+O QR code não é impresso nos logs. Abra `http://localhost:3000/qr` no navegador; a tela atualiza o código automaticamente. O visualizador não exige autenticação e compartilha a porta da API. Qualquer pessoa com acesso à porta 3000 pode ler o QR enquanto ele estiver válido; mantenha o serviço em uma rede confiável. A sessão e o cache do WhatsApp ficam no único volume Docker `jwbot`, inclusive após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
 
 Para testar alterações locais antes da publicação da imagem, construa a tag indicada pelo Compose e inicie sem buscar a imagem do registry:
 
 ```powershell
-docker build -t ghcr.io/wagchi22/jwbot:v3.1.9 .
+docker build -t ghcr.io/wagchi22/jwbot:v3.2.0 .
 docker compose up -d --pull never --no-build jwbot
 ```
 

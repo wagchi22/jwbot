@@ -12,27 +12,27 @@ const { logError, logInfo } = require('./logger');
 
 function readConfig(env = process.env) {
   const apiToken = env.API_TOKEN?.trim();
-  if (!apiToken) throw new Error('Defina API_TOKEN no ambiente antes de iniciar.');
+  if (!apiToken) throw new Error('Defina API_TOKEN no ambiente antes de iniciar');
 
   const recipients = (env.WA_RECIPIENTS || '')
     .split(',')
     .map((number) => number.replace(/\D/g, ''))
     .filter(Boolean);
   if (recipients.length === 0) {
-    throw new Error('Defina ao menos um número em WA_RECIPIENTS.');
+    throw new Error('Defina ao menos um número em WA_RECIPIENTS');
   }
   if (recipients.some((number) => number.length < 8 || number.length > 15)) {
-    throw new Error('Cada número em WA_RECIPIENTS deve ter entre 8 e 15 dígitos.');
+    throw new Error('Cada número em WA_RECIPIENTS deve ter entre 8 e 15 dígitos');
   }
 
   const selfPhoneNumber = (env.WA_SELF_NUMBER || '').replace(/\D/g, '') || null;
   if (selfPhoneNumber && (selfPhoneNumber.length < 8 || selfPhoneNumber.length > 15)) {
-    throw new Error('WA_SELF_NUMBER deve ter entre 8 e 15 dígitos.');
+    throw new Error('WA_SELF_NUMBER deve ter entre 8 e 15 dígitos');
   }
 
   const port = Number(env.PORT || 3000);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('PORT deve ser um número inteiro entre 1 e 65535.');
+    throw new Error('PORT deve ser um número inteiro entre 1 e 65535');
   }
 
   const dedupeWindowSeconds = Number(env.WA_DEDUPE_WINDOW_SECONDS || 300);
@@ -41,7 +41,7 @@ function readConfig(env = process.env) {
     || dedupeWindowSeconds < 0
     || dedupeWindowSeconds > 86400
   ) {
-    throw new Error('WA_DEDUPE_WINDOW_SECONDS deve ser um inteiro entre 0 e 86400.');
+    throw new Error('WA_DEDUPE_WINDOW_SECONDS deve ser um inteiro entre 0 e 86400');
   }
 
   return {
@@ -66,23 +66,6 @@ function isWhatsAppStreamReady(state) {
     && state?.streamMode === state?.mainMode
     && state?.displayInfoIsNormal === true
     && state?.hasSynced === true;
-}
-
-const knownNonFatalWhatsAppConsoleErrorPatterns = [
-  /\[newsletter\]\s+unsupported msg type=chat\b/i,
-  /The Content Security Policy directive 'upgrade-insecure-requests' is ignored when delivered in a report-only policy/i,
-  /storage bucket persistence denied/i,
-  /Haste-supplied config for the QPL event/i,
-  /WALogger called before initialization/i,
-  /Failed to execute 'get' on 'IDBObjectStore': No key or key range specified/i,
-  /findOrCreateLatestChat.*id->lid failed.*findOrCreateLatestChat_lid_not_found/i,
-  /Failed to load resource: the server responded with a status of 400/i,
-  /Protocol error \((?:Runtime\.addBinding|Page\.addScriptToEvaluateOnNewDocument)\): Target closed/i,
-  /\[processLiveMessage\] bad history msg [\s\S]*?\bt=pinned_message\b[\s\S]*?\(bad-process-live-message-call\)/i,
-];
-
-function isKnownNonFatalWhatsAppConsoleError(text) {
-  return knownNonFatalWhatsAppConsoleErrorPatterns.some((pattern) => pattern.test(text));
 }
 
 function listenForRequests(app, port, host) {
@@ -155,26 +138,13 @@ function createApp({
       : undefined;
     const suppliedToken = bearerToken || req.get('x-api-key') || bodyToken;
     if (!tokenMatches(suppliedToken, apiToken)) {
-      const bodyKeys = req.body && typeof req.body === 'object' && !Array.isArray(req.body)
-        ? Object.keys(req.body).filter((key) => !/token/i.test(key))
-        : [];
-      logError(
-        'Webhook recusado: token ausente ou inválido.',
-        JSON.stringify({
-          contentType: req.get('content-type') || 'ausente',
-          bodyType: Array.isArray(req.body) ? 'array' : typeof req.body,
-          tokenFieldPresent: Boolean(bodyToken),
-          authorizationHeaderPresent: Boolean(authorization),
-          apiKeyHeaderPresent: Boolean(req.get('x-api-key')),
-          otherBodyFields: bodyKeys,
-        }),
-      );
-      return res.status(401).json({ error: 'Token ausente ou inválido.' });
+      logError('Token inválido no webhook');
+      return res.status(401).json({ error: 'Token ausente ou inválido' });
     }
 
     if (!isReady()) {
-      logError('Webhook recusado: WhatsApp ainda não está conectado.');
-      return res.status(503).json({ error: 'WhatsApp ainda não está conectado.' });
+      logError('WhatsApp offline');
+      return res.status(503).json({ error: 'WhatsApp ainda não está conectado' });
     }
 
     let targetRecipients = recipients;
@@ -182,13 +152,13 @@ function createApp({
       const requestedRecipient = req.body.recipient;
       if (requestedRecipient !== undefined) {
         if (typeof requestedRecipient !== 'string') {
-          logError('Webhook recusado: recipient inválido.');
-          return res.status(400).json({ error: 'recipient deve ser um número configurado.' });
+          logError('Destinatário inválido');
+          return res.status(400).json({ error: 'recipient deve ser um número configurado' });
         }
         const normalizedRecipient = requestedRecipient.replace(/\D/g, '');
         if (!recipients.includes(normalizedRecipient)) {
-          logError('Webhook recusado: recipient não configurado.');
-          return res.status(400).json({ error: 'recipient não está na lista de destinatários configurados.' });
+          logError('Destinatário não configurado');
+          return res.status(400).json({ error: 'recipient não está na lista de destinatários configurados' });
         }
         targetRecipients = [normalizedRecipient];
       }
@@ -199,7 +169,7 @@ function createApp({
       message = formatNotification(req.body);
     } catch (error) {
       logError(
-        'Webhook recusado: payload sem mensagem válida.',
+        'Webhook sem mensagem válida',
         error instanceof Error ? error.message : String(error),
       );
       return res.status(400).json({ error: error.message });
@@ -225,13 +195,13 @@ function createApp({
       }
       dedupeKey = JSON.stringify([eventType, itemId, [...targetRecipients].sort()]);
       if (recentEvents.has(dedupeKey)) {
-        logInfo('Notificação duplicada ignorada.');
+        logInfo('Duplicado ignorado');
         return res.status(200).json({ sent: 0, duplicate: true });
       }
       recentEvents.set(dedupeKey, now + dedupeWindowMs);
     }
 
-    logInfo('Webhook recebido.');
+    logInfo('Webhook recebido');
     const deliveries = await Promise.allSettled(
       targetRecipients.map((number) => sendWhatsAppMessage(
         client,
@@ -252,15 +222,15 @@ function createApp({
           : 'Erro desconhecido';
         return reason;
       }).join('; ');
-      logError(`Falha ao enviar notificação: ${reasons}`);
+      logError(`Falha no envio: ${reasons}`);
       return res.status(502).json({
-        error: 'Não foi possível entregar a notificação a todos os destinatários.',
+        error: 'Não foi possível entregar a notificação a todos os destinatários',
         sent: targetRecipients.length - failed.length,
         failed: failed.length,
       });
     }
 
-    logInfo(`Notificação enviada para ${targetRecipients.length} destinatário(s).`);
+    logInfo(`Enviado para ${targetRecipients.length} destinatário(s)`);
     return res.status(200).json({ sent: targetRecipients.length });
   });
 
@@ -268,13 +238,13 @@ function createApp({
 
   app.use((error, _req, res, _next) => {
     if (error instanceof SyntaxError && 'body' in error) {
-      return res.status(400).json({ error: 'JSON inválido.' });
+      return res.status(400).json({ error: 'JSON inválido' });
     }
     logError(
-      'Erro inesperado na API:',
+      'Erro na API:',
       error instanceof Error ? error.message : String(error),
     );
-    return res.status(500).json({ error: 'Erro interno da API.' });
+    return res.status(500).json({ error: 'Erro interno da API' });
   });
 
   return app;
@@ -282,7 +252,6 @@ function createApp({
 
 async function start() {
   const config = readConfig();
-  logInfo('Iniciando API...');
   let whatsappReady = false;
   let qrImage;
   let qrRevision = 0;
@@ -292,6 +261,7 @@ async function start() {
     authStrategy: new LocalAuth(),
     puppeteer: {
       handleSIGINT: false,
+      dumpio: false,
       args: process.env.PUPPETEER_NO_SANDBOX === '1' ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
     },
   });
@@ -302,36 +272,31 @@ async function start() {
     whatsappReady = true;
     qrImage = null;
     qrRevision += 1;
-    logInfo('Sessão do WhatsApp conectada e autenticada.');
-    logInfo('Aguardando Webhooks...');
+    logInfo('WhatsApp conectado');
   };
 
   client.on('qr', (qr) => {
     const revision = ++qrRevision;
     qrImage = null;
-    logInfo(`Novo QR code disponível no visualizador local em http://localhost:${config.port}/qr.`);
     renderQrPng(qr).then((image) => {
       if (revision !== qrRevision) return;
       qrImage = image;
       qrRevision += 1;
     }).catch((error) => {
       if (revision !== qrRevision) return;
-      logError(`Não foi possível gerar a imagem do QR code: ${error.message}`);
+      logError(`Falha ao gerar QR: ${error.message}`);
     });
   });
   client.on('ready', markWhatsAppReady);
-  client.on('loading_screen', (percent, message) => {
-    logInfo(`WhatsApp Web carregando (${percent}%): ${message}`);
-  });
   client.on('change_state', (state) => {
-    logInfo(`Estado da conexão WhatsApp: ${state}`);
+    logInfo(`WhatsApp: ${state}`);
     if (state !== 'CONNECTED') whatsappReady = false;
   });
   client.on('auth_failure', (message) => {
     whatsappReady = false;
     qrImage = null;
     qrRevision += 1;
-    logError(`Falha na autenticação do WhatsApp: ${message}`);
+    logError(`Falha ao autenticar WhatsApp: ${message}`);
   });
   client.on('disconnected', (reason) => {
     whatsappReady = false;
@@ -341,8 +306,6 @@ async function start() {
   });
 
   const qr = {
-    apiToken: config.apiToken,
-    tokenMatches,
     getQrPng: () => qrImage,
     getState: () => ({
       state: whatsappReady ? 'ready' : qrImage ? 'qr' : 'waiting',
@@ -364,44 +327,15 @@ async function start() {
   } catch (error) {
     if (error.code === 'EADDRINUSE') {
       throw new Error(
-        `A porta ${config.port} já está em uso. Encerre a outra instância do bot ou altere PORT no .env.`,
+        `A porta ${config.port} já está em uso. Encerre a outra instância do bot ou altere PORT no .env`,
       );
     }
     throw error;
   }
-  logInfo(`API disponível na porta ${config.port}.`);
-  logInfo(`Visualizador do QR disponível em http://localhost:${config.port}/qr (usuário: jwbot; senha: valor de API_TOKEN).`);
+  logInfo(`API iniciada na porta ${config.port}`);
+  logInfo(`QR code disponível em http://localhost:${config.port}/qr`);
 
   let readinessCheckRunning = false;
-  let readinessDiagnosticShown = false;
-  let diagnosticsAttached = false;
-  const diagnosticsInterval = setInterval(() => {
-    if (!client.pupPage || diagnosticsAttached) return;
-    diagnosticsAttached = true;
-    clearInterval(diagnosticsInterval);
-    client.pupPage.on('pageerror', (error) => {
-      logError(`Erro JavaScript na página do WhatsApp: ${error.message}`);
-    });
-    client.pupPage.on('console', (message) => {
-      if (message.type() !== 'error') return;
-      const text = message.text();
-      if (isKnownNonFatalWhatsAppConsoleError(text)) return;
-      logError(`Erro no console do WhatsApp Web: ${text}`);
-    });
-    client.pupPage.on('requestfailed', (request) => {
-      const error = request.failure()?.errorText || 'network error';
-      const requestUrl = new URL(request.url());
-      if (
-        error === 'net::ERR_ABORTED'
-        || (error === 'net::ERR_BLOCKED_BY_ORB' && requestUrl.hostname === 'www.facebook.com')
-      ) {
-        return;
-      }
-      logError(`Falha ao carregar recurso do WhatsApp Web: ${error} ${requestUrl.origin}`);
-    });
-  }, 250);
-  diagnosticsInterval.unref();
-
   readinessInterval = setInterval(async () => {
     if (whatsappReady || readinessCheckRunning || !client.pupPage || client.pupPage.isClosed()) {
       return;
@@ -445,7 +379,7 @@ async function start() {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (!/target closed|execution context was destroyed|cannot find context/i.test(message)) {
-        logError(`Não foi possível verificar o estado do WhatsApp: ${message}`);
+        logError(`Falha ao verificar WhatsApp: ${message}`);
       }
     } finally {
       readinessCheckRunning = false;
@@ -454,59 +388,19 @@ async function start() {
   readinessInterval.unref();
 
   client.initialize().catch((error) => {
-    logError(`Não foi possível iniciar o cliente do WhatsApp: ${error}`);
+    logError(`Falha ao iniciar WhatsApp: ${error}`);
     clearInterval(readinessInterval);
     server.close(() => process.exit(1));
   });
 
-  readinessDiagnosticTimeout = setTimeout(async () => {
-    if (whatsappReady || readinessDiagnosticShown) return;
-    readinessDiagnosticShown = true;
-
-    if (!client.pupPage || client.pupPage.isClosed()) {
-      logError('O WhatsApp ainda não ficou pronto após 45 segundos; navegador sem página ativa.');
-      return;
-    }
-
-    try {
-      const diagnostics = await client.pupPage.evaluate(() => {
-        const libraryInjected = typeof window.WWebJS !== 'undefined';
-        const result = {
-          title: document.title,
-          pageState: document.readyState,
-          libraryInjected,
-          webVersion: window.Debug?.VERSION ?? 'indisponível',
-        };
-        if (!libraryInjected) return result;
-
-        try {
-          result.connectionState = window.require('WAWebSocketModel').Socket.state;
-        } catch {
-          result.connectionState = 'módulo ainda não carregado';
-        }
-        try {
-          const stream = window.require('WAWebStreamModel').Stream;
-          result.streamMode = stream.mode;
-          result.hasSynced = stream.hasSynced;
-        } catch {
-          result.streamMode = 'módulo ainda não carregado';
-        }
-        return result;
-      });
-      logInfo(`Estado de diagnóstico do WhatsApp: ${JSON.stringify(diagnostics)}`);
-      if (!whatsappReady) {
-        logError('O WhatsApp ainda não confirmou a conexão. A API permanece indisponível para envios.');
-      }
-    } catch (error) {
-      logError(`O WhatsApp ainda não confirmou a conexão: ${error.message}`);
-    }
+  readinessDiagnosticTimeout = setTimeout(() => {
+    if (!whatsappReady && !qrImage) logError('WhatsApp indisponível');
   }, 45000);
   readinessDiagnosticTimeout.unref();
 
   const shutdown = async () => {
     clearTimeout(readinessDiagnosticTimeout);
     clearInterval(readinessInterval);
-    clearInterval(diagnosticsInterval);
     server.close();
     await client.destroy();
   };
@@ -524,7 +418,6 @@ if (require.main === module) {
 module.exports = {
   createApp,
   createQrApp,
-  isKnownNonFatalWhatsAppConsoleError,
   isWhatsAppStreamReady,
   listenForRequests,
   readConfig,

@@ -14,9 +14,9 @@ const page = `<!doctype html>
 </head>
 <body>
   <h1>Conectar WhatsApp</h1>
-  <p id="status" role="status">Aguardando o QR code...</p>
+  <p id="status" role="status">Aguardando QR code</p>
   <img id="qr" alt="QR code para conectar o WhatsApp" hidden>
-  <p>Escaneie em WhatsApp &gt; Aparelhos conectados &gt; Conectar aparelho.</p>
+  <p>Escaneie em WhatsApp &gt; Aparelhos conectados &gt; Conectar aparelho</p>
   <script>
     const status = document.querySelector('#status');
     const image = document.querySelector('#qr');
@@ -33,15 +33,15 @@ const page = `<!doctype html>
     async function refresh() {
       try {
         const response = await fetch('/qr/status', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Falha ao consultar o estado.');
+        if (!response.ok) throw new Error('Falha ao consultar o estado');
         const state = await response.json();
 
         if (state.state === 'ready') {
-          status.textContent = 'WhatsApp conectado.';
+          status.textContent = 'WhatsApp conectado';
           clearImage();
           revision = state.revision;
         } else if (state.state === 'qr') {
-          status.textContent = 'Escaneie o QR code com o WhatsApp.';
+          status.textContent = 'Escaneie o QR code com o WhatsApp';
           if (revision !== state.revision) {
             const qrResponse = await fetch('/qr/qr.png', { cache: 'no-store' });
             if (qrResponse.status === 200) {
@@ -54,12 +54,12 @@ const page = `<!doctype html>
             }
           }
         } else {
-          status.textContent = 'Aguardando o QR code do WhatsApp...';
+          status.textContent = 'Aguardando QR code';
           clearImage();
           revision = state.revision;
         }
       } catch {
-        status.textContent = 'Não foi possível carregar o QR code. Atualize a página.';
+        status.textContent = 'QR indisponível. Atualize a página';
       }
       window.setTimeout(refresh, 2000);
     }
@@ -69,9 +69,9 @@ const page = `<!doctype html>
 </body>
 </html>`;
 
-function createQrApp({ apiToken, tokenMatches, getQrPng, getState }) {
+function createQrApp({ getQrPng, getState }) {
   const router = express.Router();
-  router.use((req, res, next) => {
+  router.use((_req, res, next) => {
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, private',
       'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'",
@@ -79,19 +79,6 @@ function createQrApp({ apiToken, tokenMatches, getQrPng, getState }) {
       'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff',
     });
-
-    const encodedCredentials = req.get('authorization')?.match(/^Basic\s+(.+)$/i)?.[1];
-    const credentials = encodedCredentials
-      ? Buffer.from(encodedCredentials, 'base64').toString('utf8')
-      : '';
-    const separator = credentials.indexOf(':');
-    const username = credentials.slice(0, separator);
-    const password = separator < 0 ? '' : credentials.slice(separator + 1);
-    if (username !== 'jwbot' || !tokenMatches(password, apiToken)) {
-      res.set('WWW-Authenticate', 'Basic realm="jwbot QR", charset="UTF-8"');
-      return res.status(401).type('text').send('Autenticação necessária.');
-    }
-
     return next();
   });
 
