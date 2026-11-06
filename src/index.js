@@ -3,7 +3,7 @@ require('dotenv').config({ quiet: true });
 const crypto = require('node:crypto');
 const http = require('node:http');
 const express = require('express');
-const qrcode = require('qrcode-terminal');
+const { renderQr } = require('./qr');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { formatNotification } = require('./notifications');
 const { sendWhatsAppMessage } = require('./whatsapp');
@@ -298,7 +298,7 @@ async function start() {
 
   client.on('qr', (qr) => {
     logInfo('Escaneie este QR code com o WhatsApp para conectar:');
-    qrcode.generate(qr, { small: true });
+    console.log(renderQr(qr));
   });
   client.on('ready', markWhatsAppReady);
   client.on('loading_screen', (percent, message) => {
