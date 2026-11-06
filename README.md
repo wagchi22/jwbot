@@ -168,8 +168,9 @@ mantenedor autenticado pelo workflow de release.
 
 Configure o secret `SEMANTIC_RELEASE_TOKEN` com um fine-grained personal access
 token do mantenedor, limitado a este repositório e com permissão de leitura e
-escrita em **Contents**. Esse token é usado apenas para enviar o commit de
-versão; a publicação da release no GitHub usa `GITHUB_TOKEN`.
+escrita em **Contents**. O workflow usa esse token para enviar o commit de
+versão e publicar a release no GitHub, permitindo que a publicação dispare o
+workflow que constrói e publica a imagem Docker versionada.
 
 ## Licença
 
