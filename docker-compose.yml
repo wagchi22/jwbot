@@ -1,6 +1,7 @@
 services:
   jwbot:
     image: ghcr.io/wagchi22/jwbot:latest
+    container_name: jwbot
     init: true
     restart: unless-stopped
     env_file:
