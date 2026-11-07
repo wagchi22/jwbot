@@ -77,6 +77,14 @@ test('loads and normalizes configured recipient numbers', () => {
   assert.deepEqual(config.recipients, ['15550100101', '15550100102']);
   assert.equal(config.selfPhoneNumber, '15550100101');
   assert.equal(config.dedupeWindowMs, 30000);
+  assert.equal(config.authTimeoutMs, 120000);
+
+  const configuredTimeout = readConfig({
+    API_TOKEN: 'test-secret',
+    WA_RECIPIENTS: '15550100101',
+    WA_AUTH_TIMEOUT_MS: '180000',
+  });
+  assert.equal(configuredTimeout.authTimeoutMs, 180000);
 });
 
 test('rejects invalid configuration values', () => {
@@ -96,6 +104,11 @@ test('rejects invalid configuration values', () => {
     WA_RECIPIENTS: '15550100101',
     WA_DEDUPE_WINDOW_SECONDS: '-1',
   }), /WA_DEDUPE_WINDOW_SECONDS/);
+  assert.throws(() => readConfig({
+    API_TOKEN: 'secret',
+    WA_RECIPIENTS: '15550100101',
+    WA_AUTH_TIMEOUT_MS: '600001',
+  }), /WA_AUTH_TIMEOUT_MS/);
 });
 
 test('compares API tokens without accepting a mismatch', () => {

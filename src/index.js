@@ -44,12 +44,18 @@ function readConfig(env = process.env) {
     throw new Error('WA_DEDUPE_WINDOW_SECONDS deve ser um inteiro entre 0 e 86400');
   }
 
+  const authTimeoutMs = Number(env.WA_AUTH_TIMEOUT_MS || 120000);
+  if (!Number.isInteger(authTimeoutMs) || authTimeoutMs < 1000 || authTimeoutMs > 600000) {
+    throw new Error('WA_AUTH_TIMEOUT_MS deve ser um inteiro entre 1000 e 600000');
+  }
+
   return {
     apiToken,
     port,
     recipients: [...new Set(recipients)],
     selfPhoneNumber,
     dedupeWindowMs: dedupeWindowSeconds * 1000,
+    authTimeoutMs,
   };
 }
 
@@ -259,6 +265,7 @@ async function start() {
   let readinessDiagnosticTimeout;
   const client = new Client({
     authStrategy: new LocalAuth(),
+    authTimeoutMs: config.authTimeoutMs,
     puppeteer: {
       handleSIGINT: false,
       dumpio: false,
