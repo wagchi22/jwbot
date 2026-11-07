@@ -46,12 +46,14 @@ API_TOKEN=troque-por-um-token-secreto
 WA_RECIPIENTS=15550100101,15550100102
 WA_SELF_NUMBER=
 WA_DEDUPE_WINDOW_SECONDS=300
+WA_AUTH_TIMEOUT_MS=120000
 ```
 
 - `API_TOKEN`: token usado para autenticar requisições.
 - `WA_RECIPIENTS`: números no formato E.164 sem `+`.
 - `WA_SELF_NUMBER`: use apenas quando um destinatário for o próprio número da conta conectada.
 - `WA_DEDUPE_WINDOW_SECONDS`: tempo para ignorar eventos repetidos; use `0` para desativar.
+- `WA_AUTH_TIMEOUT_MS`: tempo máximo para o WhatsApp conectar, em milissegundos (padrão `120000`; valores entre `1000` e `600000`).
 
 ## Execução
 
