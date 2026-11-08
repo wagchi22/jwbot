@@ -4,15 +4,15 @@
 
 # jwbot
 
-Bot simples para receber notificações do Jellyfin e enviá-las para números do WhatsApp.
+Bot para receber notificações do Jellyfin e enviá-las para contatos do WhatsApp.
 
-## O que ele faz
+## Visão geral
 
-- recebe requisições HTTP do Jellyfin;
+- recebe webhooks do Jellyfin;
 - valida um token secreto;
 - envia mensagens para os destinatários configurados;
-- ignora notificações duplicadas em um intervalo configurável;
-- mostra um QR code para conectar a conta do WhatsApp.
+- ignora duplicatas em um intervalo configurável;
+- exibe um QR code para conectar a conta do WhatsApp.
 
 ## Requisitos
 
@@ -34,7 +34,7 @@ npm install
 
 ```bash
 node bin/jwbot.js init
-# ou, após a instalação local do pacote:
+# ou, após instalar o pacote localmente:
 jwbot init
 ```
 
@@ -52,8 +52,8 @@ WA_AUTH_TIMEOUT_MS=120000
 - `API_TOKEN`: token usado para autenticar requisições.
 - `WA_RECIPIENTS`: números no formato E.164 sem `+`.
 - `WA_SELF_NUMBER`: use apenas quando um destinatário for o próprio número da conta conectada.
-- `WA_DEDUPE_WINDOW_SECONDS`: tempo para ignorar eventos repetidos; use `0` para desativar.
-- `WA_AUTH_TIMEOUT_MS`: tempo máximo para o WhatsApp conectar, em milissegundos (padrão `120000`; valores entre `1000` e `600000`).
+- `WA_DEDUPE_WINDOW_SECONDS`: intervalo para ignorar eventos repetidos; use `0` para desativar.
+- `WA_AUTH_TIMEOUT_MS`: tempo máximo para conectar ao WhatsApp, em milissegundos (padrão `120000`).
 
 ## Execução
 
@@ -61,56 +61,32 @@ WA_AUTH_TIMEOUT_MS=120000
 npm start
 ```
 
-Depois, abra `http://localhost:3000/qr` no navegador para ver o QR code como imagem.
-As mensagens do terminal incluem data/hora local e nível (`INFO` ou `ERRO`), com cores quando executadas em um terminal. Defina `NO_COLOR` para desativar as cores.
+Acesse `http://localhost:3000/qr` para ver o QR code. A API também expõe o endpoint `GET /health` para verificar se a sessão do WhatsApp já está pronta.
 
-### Docker Compose
+## Docker Compose
 
-Gere e configure o arquivo `.env` conforme a seção anterior. Em seguida, baixe a imagem mais recente (`latest`) e inicie o serviço:
+Configure o arquivo `.env` como descrito acima e inicie o serviço:
 
 ```bash
 docker compose pull jwbot
 docker compose up -d jwbot
 ```
 
-O QR code não é impresso nos logs. Abra `http://localhost:3000/qr` no navegador; a tela atualiza o código automaticamente. O visualizador não exige autenticação e compartilha a porta da API. Qualquer pessoa com acesso à porta 3000 pode ler o QR enquanto ele estiver válido; mantenha o serviço em uma rede confiável. A sessão e o cache do WhatsApp ficam no único volume Docker `jwbot`, inclusive após recriar o contêiner. Para parar o serviço sem remover esses dados, use `docker compose down`.
+O QR code não aparece nos logs; abra `http://localhost:3000/qr` para visualizá-lo no navegador. A sessão e o cache do WhatsApp ficam no volume Docker `jwbot`, e o serviço pode ser parado com `docker compose down` sem remover esses dados.
 
-Para testar alterações locais antes da publicação da imagem, construa a tag `latest` usada pelo Compose e inicie sem buscar a imagem do registry:
-
-```powershell
-docker build -t ghcr.io/wagchi22/jwbot:latest .
-docker compose up -d --pull never --no-build jwbot
-```
-
-Escaneie o QR code em **WhatsApp > Aparelhos conectados > Conectar aparelho**. Se o código expirar, aguarde o próximo ou reinicie o contêiner para gerar outro. Não compartilhe capturas dos logs enquanto um QR code estiver visível, pois ele pode ser usado para conectar à sessão do WhatsApp.
-
-Se o Chromium informar que o perfil está em uso depois de recriar o contêiner, pare o serviço e remova apenas os arquivos de trava antigos da sessão. Isso mantém a autenticação salva; não execute se outro contêiner estiver usando o mesmo volume:
-
-```powershell
-docker compose stop jwbot
-docker run --rm -v jwbot:/auth alpine sh -c "rm -f /auth/session/SingletonLock /auth/session/SingletonCookie /auth/session/SingletonSocket"
-docker compose up -d jwbot
-```
-
-O contêiner usa um hostname estável para evitar que o Chromium confunda uma trava deixada por uma recriação com um perfil aberto em outra máquina. A autenticação e o cache continuam no único volume `jwbot`.
-
-O Compose usa a imagem `ghcr.io/wagchi22/jwbot:latest`, publicada no GitHub Container Registry. Após a publicação inicial, deixe o pacote com visibilidade pública nas configurações do pacote no GitHub para permitir pulls sem autenticação. Commits na branch principal e tags `v*` publicam imagens automaticamente, depois da aprovação dos testes. Por padrão, a API fica disponível na porta definida por `PORT` no `.env` (3000, se não definida). O contêiner usa Chromium instalado na imagem; não é necessário instalar Node.js ou Chromium no host.
-
-No Windows, também é possível usar:
+No Windows, também é possível iniciar com:
 
 ```powershell
 .\jwbot.bat
 ```
 
-Ou iniciar direto:
+Ou diretamente:
 
 ```powershell
 node .\src\index.js
 ```
 
 A sessão do WhatsApp fica em `.wwebjs_auth/` e não deve ser compartilhada nem versionada.
-
-O endpoint `GET /health` informa se a conexão com o WhatsApp já está pronta.
 
 ## Integração com o Jellyfin
 
@@ -131,9 +107,7 @@ Exemplo de payload com token e mensagem:
 }
 ```
 
-Assim, eventos `ItemRemoved` são enviados como `Jellyfin: *<título>* saiu do catálogo`; os demais eventos continuam usando `entrou no catálogo`.
-
-Você também pode enviar um payload simples:
+Também é possível enviar um payload simples:
 
 ```json
 {
@@ -156,9 +130,9 @@ Invoke-RestMethod `
 
 ## Observações importantes
 
-- `localhost` só funciona quando o Jellyfin e a API estiverem na mesma máquina ou rede local.
-- Se a API estiver exposta fora da rede local, proteja-a com autenticação e use HTTPS.
-- A API responde com `503` enquanto o WhatsApp estiver desconectado ou reconectando, `400` para payload inválido e `502` se o envio falhar para algum destinatário.
+- `localhost` funciona somente quando o Jellyfin e a API estão na mesma máquina ou rede local.
+- Se a API ficar exposta fora da rede local, proteja-a com autenticação e use HTTPS.
+- A API responde com `503` enquanto o WhatsApp estiver desconectado ou reconectando, `400` para payload inválido e `502` em falhas no envio para algum destinatário.
 - O campo `recipient` pode ser usado para enviar a mensagem apenas para um número específico já configurado.
 
 ## Testes
@@ -166,22 +140,6 @@ Invoke-RestMethod `
 ```bash
 npm test
 ```
-
-## Releases
-
-Commits convencionais enviados para `main` geram uma release e uma tag no
-GitHub. O plugin `@semantic-release/npm` atualiza `package.json` e
-`package-lock.json` sem publicar o pacote; `@semantic-release/git` commita essas
-versões na `main`.
-
-O ruleset exige PR para alterações normais e permite bypass ao usuário
-mantenedor autenticado pelo workflow de release.
-
-Configure o secret `SEMANTIC_RELEASE_TOKEN` com um fine-grained personal access
-token do mantenedor, limitado a este repositório e com permissão de leitura e
-escrita em **Contents**. O workflow usa esse token para enviar o commit de
-versão e publicar a release no GitHub, permitindo que a publicação dispare o
-workflow que constrói e publica a imagem Docker versionada.
 
 ## Licença
 
