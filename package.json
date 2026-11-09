@@ -1,6 +1,6 @@
 {
   "name": "jwbot",
-  "version": "3.3.2",
+  "version": "3.3.3",
   "description": "API de notificações do Jellyfin para WhatsApp",
   "license": "MIT",
   "main": "src/index.js",
