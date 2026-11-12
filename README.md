@@ -12,7 +12,7 @@ Bot para receber notificações do Jellyfin e enviá-las para contatos do WhatsA
 - valida um token secreto;
 - envia mensagens para os destinatários configurados;
 - ignora duplicatas em um intervalo configurável;
-- exibe um QR code para conectar a conta do WhatsApp.
+- conecta a conta do WhatsApp Web usando [whatsapp-web.js](https://github.com/wwebjs/whatsapp-web.js) e autenticação por QR code.
 
 ## Requisitos
 
